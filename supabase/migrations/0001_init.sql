@@ -567,11 +567,15 @@ alter publication supabase_realtime add table
 /* Permisos de funciones                                               */
 /* ------------------------------------------------------------------ */
 
-revoke all on function public.create_space(text) from public;
-revoke all on function public.ensure_invitation(uuid) from public;
-revoke all on function public.preview_invitation(text) from public;
-revoke all on function public.accept_invitation(text) from public;
-revoke all on function public.set_member_avatar(uuid, text) from public;
+revoke all on function public.create_space(text) from public, anon;
+revoke all on function public.ensure_invitation(uuid) from public, anon;
+revoke all on function public.preview_invitation(text) from public, anon;
+revoke all on function public.accept_invitation(text) from public, anon;
+revoke all on function public.set_member_avatar(uuid, text) from public, anon;
+
+revoke all on function public.is_space_member(uuid) from public, anon;
+revoke all on function public.shares_space_with(uuid) from public, anon;
+revoke all on function public.storage_space_id(text) from public, anon;
 
 grant execute on function public.create_space(text) to authenticated;
 grant execute on function public.ensure_invitation(uuid) to authenticated;
