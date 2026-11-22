@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "LovePlans",
+    "slug": "loveplans",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "loveplans",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.loveplans.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "LovePlans usa la cámara para añadir fotos a sus planes.",
+        "NSPhotoLibraryUsageDescription": "LovePlans usa tus fotos para guardar los recuerdos de sus citas."
+      }
+    },
+    "android": {
+      "package": "app.loveplans.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#f8f6f1"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "output": "single",
+      "bundler": "metro",
+      "favicon": "./assets/images/favicon.png",
+      "name": "LovePlans",
+      "shortName": "LovePlans",
+      "lang": "es",
+      "themeColor": "#f8f6f1",
+      "backgroundColor": "#f8f6f1",
+      "display": "standalone",
+      "orientation": "portrait",
+      "startUrl": "/",
+      "scope": "/"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "LovePlans usa tus fotos para guardar los recuerdos de sus citas.",
+          "cameraPermission": "LovePlans usa la cámara para añadir fotos a sus planes."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#f8f6f1",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

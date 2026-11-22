@@ -1,0 +1,42 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "rewrites": [
+    { "source": "/i/:code", "destination": "/index.html" },
+    { "source": "/plan/:path*", "destination": "/index.html" },
+    { "source": "/nuevo", "destination": "/index.html" },
+    { "source": "/welcome", "destination": "/index.html" },
+    { "source": "/verify", "destination": "/index.html" },
+    { "source": "/space", "destination": "/index.html" },
+    { "source": "/invite", "destination": "/index.html" },
+    { "source": "/accept", "destination": "/index.html" },
+    { "source": "/demo", "destination": "/index.html" },
+    { "source": "/planes", "destination": "/index.html" },
+    { "source": "/calendario", "destination": "/index.html" },
+    { "source": "/recuerdos", "destination": "/index.html" },
+    { "source": "/nosotros", "destination": "/index.html" }
+  ],
+  "crons": [{ "path": "/api/keepalive", "schedule": "0 9 * * *" }],
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/icons/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    }
+  ]
+}

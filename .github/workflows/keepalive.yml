@@ -1,0 +1,26 @@
+name: Supabase keepalive (opcional)
+
+# Alternativa a la tarea de Windows. GitHub Actions no depende de tu PC.
+# Configura los secretos SUPABASE_URL y SUPABASE_ANON_KEY en el repo.
+# Nota: GitHub desactiva los crons tras 60 días sin actividad en el repo.
+
+on:
+  schedule:
+    - cron: '0 9 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping a Supabase
+        run: |
+          if [ -z "${{ secrets.SUPABASE_URL }}" ]; then
+            echo "Sin secretos configurados; se omite."
+            exit 0
+          fi
+          curl -sS -X POST "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/ping" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
