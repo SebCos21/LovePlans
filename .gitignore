@@ -38,6 +38,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# credenciales locales
+contrasupabase.txt
+
 # herramientas
 tools/smoke/
 tools/keepalive.log
