@@ -72,11 +72,16 @@ EXPO_PUBLIC_APP_URL=http://localhost:8081
 
 La app usa **correo + código de 6 dígitos** (sin contraseña). Para que funcione:
 
-### 3.1 Plantilla del correo
+### 3.1 Plantillas del correo
 
-En Supabase: **Authentication → Emails → Magic Link**.
+En Supabase: **Authentication → Emails**.
 
-Reemplaza el contenido por algo así (lo importante es `{{ .Token }}`):
+Edita **las dos plantillas** que pueden usarse al pedir un código:
+
+- **Confirm signup** (cuando el correo es nuevo)
+- **Magic Link** (cuando el correo ya existe)
+
+En ambas, incluye `{{ .Token }}`. Las plantillas por defecto solo traen un enlace y la app necesita los 6 dígitos.
 
 ```html
 <h2>Tu código de LovePlans</h2>
@@ -260,6 +265,7 @@ api/keepalive.ts        cron diario de Vercel
 **No llega el código**
 - Revisa spam.
 - Confirma que configuraste SMTP propio (Brevo/Resend). El SMTP por defecto de Supabase no sirve para usuarios externos.
+- Revisa que **Confirm signup** y **Magic Link** incluyan `{{ .Token }}`.
 - Revisa **Authentication → Logs**.
 
 **“El código no es correcto o expiró”**
