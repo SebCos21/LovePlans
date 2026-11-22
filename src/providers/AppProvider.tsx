@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 
 import { loadDemoDb, saveDemoDb, type DemoDB } from '@/lib/demo';
 import { errorMessage, isSupabaseConfigured, requireSupabase, supabase } from '@/lib/supabase';
-import { publicAppUrl, storage } from '@/lib/storage';
+import { storage } from '@/lib/storage';
 import { base64ToBytes, randomId, toDataUrl } from '@/lib/image';
 import type {
   InvitePreview,
@@ -494,7 +494,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const client = requireSupabase();
     const { error } = await client.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: true, emailRedirectTo: publicAppUrl() },
+      options: { shouldCreateUser: true },
     });
     if (error) throw new Error(errorMessage(error));
   }, []);
