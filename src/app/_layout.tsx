@@ -64,7 +64,7 @@ function RootNavigator() {
     if (status === 'loading') return;
 
     if (status === 'signedOut') {
-      if (!['welcome', 'accept', 'reset-password'].includes(top)) router.replace('/welcome');
+      if (!['welcome', 'accept', 'reset-password', 'i'].includes(top)) router.replace('/welcome');
       return;
     }
 
@@ -82,7 +82,7 @@ function RootNavigator() {
       return;
     }
 
-    if (['welcome', 'i', 'demo', 'reset-password'].includes(top) || top === '') {
+    if (['welcome', 'demo', 'reset-password'].includes(top) || top === '') {
       router.replace('/(tabs)');
     }
   }, [status, segments, pendingInvite, recoveryMode, router]);
