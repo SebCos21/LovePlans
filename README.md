@@ -127,16 +127,17 @@ No necesitas Google ni Apple para este flujo.
 2. En <https://vercel.com> → **Add New Project** → importa el repo.
 3. Configura:
    - **Framework preset:** Other
-   - **Install command:** `npm ci`
+   - **Install command:** `npm ci --include=dev`
    - **Build command:** `npm run build:web`
    - **Output directory:** `dist`
 4. Variables de entorno (Production y Preview):
    - `EXPO_PUBLIC_SUPABASE_URL`
-   - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-   - `EXPO_PUBLIC_APP_URL=https://TU-APP.vercel.app`
+   - `EXPO_PUBLIC_SUPABASE_ANON_KEY` (la publishable key)
+   - `EXPO_PUBLIC_APP_URL=https://TU-APP.vercel.app` (opcional en el primer deploy; si falta, la app usa el dominio actual)
 5. Deploy.
-6. Vuelve a Supabase → **URL Configuration** y actualiza **Site URL** y **Redirect URLs** con la URL real de Vercel.
-7. Abre la app en el teléfono y prueba el login.
+6. Prueba `https://TU-APP.vercel.app/api/keepalive`: debe responder `Supabase: 200 ok`.
+7. Vuelve a Supabase → **URL Configuration** y actualiza **Site URL** y **Redirect URLs** con la URL real de Vercel.
+8. Abre la app en el teléfono, inicia sesión con tu correo y contraseña, y añádela a la pantalla de inicio.
 
 Cada `git push` a `main` despliega automáticamente.
 
