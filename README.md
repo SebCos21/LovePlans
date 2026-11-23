@@ -3,7 +3,7 @@
 App de planes para una pareja. Hoy es una **PWA instalable** (se abre en el navegador y se añade a la pantalla de inicio en iPhone y Android, sin tiendas) construida con **Expo + React Native Web** y **Supabase**.
 
 - **Frontend:** Expo SDK 58, Expo Router, TypeScript, React Native Web.
-- **Backend:** Supabase (Postgres, Auth por código OTP, Storage privado, Realtime).
+- **Backend:** Supabase (Postgres, Auth con correo + contraseña, Storage privado, Realtime).
 - **Hosting:** Vercel (plan gratis) + Supabase (plan gratis).
 - **Instalación:** manual en iPhone (Compartir → Añadir a pantalla de inicio) y con botón en Android/Chrome.
 - **Sin pagos, sin tiendas, sin dominio propio.**
@@ -62,39 +62,30 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=TU-ANON-KEY
 EXPO_PUBLIC_APP_URL=http://localhost:8081
 ```
 
-5. Reinicia `npm run web`. La pantalla de bienvenida ya debe decir que envía códigos.
+5. Reinicia `npm run web`. La pantalla de bienvenida ya debe mostrar **Entrar / Crear cuenta**.
 
 > La `anon key` es pública; la seguridad real está en las políticas RLS del SQL. **Nunca** pongas la `service_role` en el frontend.
 
 ---
 
-## 3. Login con código de 6 dígitos (OTP)
+## 3. Login con correo y contraseña
 
-La app usa **correo + código de 6 dígitos** (sin contraseña). Para que funcione:
+La app usa **correo + contraseña**. No depende de códigos de 6 dígitos ni de editar plantillas de correo, y funciona dentro de la app instalada en iPhone y Android.
 
-### 3.1 Plantillas del correo
+> Se cambió el OTP por contraseña porque el plan gratis no permite editar las plantillas: el correo por defecto solo trae un enlace, y en iPhone instalado ese enlace abre Safari y no comparte la sesión con la app.
 
-En Supabase: **Authentication → Emails**.
+### 3.1 Confirmación de correo
 
-Edita **las dos plantillas** que pueden usarse al pedir un código:
+En Supabase: **Authentication → Providers → Email**.
 
-- **Confirm signup** (cuando el correo es nuevo)
-- **Magic Link** (cuando el correo ya existe)
+- Si puedes, desactiva **Confirm email**. Así el registro entra directo y no se envía ningún correo.
+- Si no te deja desactivarlo, déjalo activo. Supabase enviará su correo por defecto (con un enlace) **una sola vez**. El usuario abre el enlace, confirma la cuenta y después entra con su contraseña.
 
-En ambas, incluye `{{ .Token }}`. Las plantillas por defecto solo traen un enlace y la app necesita los 6 dígitos.
+No hay que editar ninguna plantilla.
 
-```html
-<h2>Tu código de LovePlans</h2>
-<p>Escribe este código en la app:</p>
-<p style="font-size: 32px; letter-spacing: 8px"><strong>{{ .Token }}</strong></p>
-<p>Vence en 1 hora. Si no fuiste tú, ignora este correo.</p>
-```
+### 3.2 SMTP propio (para confirmación y recuperación)
 
-> Mantén la longitud del OTP en **6 dígitos** (Authentication → Settings). La app está diseñada para 6.
-
-### 3.2 SMTP propio (obligatorio en la práctica)
-
-El SMTP integrado de Supabase solo envía a correos del equipo del proyecto y tiene límites muy bajos. Para uso real configura un SMTP gratis:
+El SMTP integrado de Supabase solo envía a correos del equipo del proyecto y tiene límites muy bajos. Para que la confirmación y la recuperación de contraseña lleguen a correos externos, configura un SMTP gratis:
 
 **Brevo (recomendado, 300 correos/día gratis)**
 
@@ -107,18 +98,24 @@ El SMTP integrado de Supabase solo envía a correos del equipo del proyecto y ti
    - Username / Password: los de Brevo
    - Sender email: el correo verificado
    - Sender name: `LovePlans`
-5. En **Authentication → Rate Limits**, sube el límite de emails si hace falta (por defecto es bajo).
+5. En **Authentication → Rate Limits**, sube el límite de emails si hace falta.
 
-> Alternativa: Resend (100 correos/día). Brevo suele ser más simple sin dominio propio.
+> Si no configuras SMTP y no puedes desactivar la confirmación, los correos de confirmación no llegarán a correos externos.
 
 ### 3.3 URLs de autenticación
 
 En **Authentication → URL Configuration**:
 
-- **Site URL:** la URL de producción, por ejemplo `https://loveplans.vercel.app`.
+- **Site URL:**
+  - Para probar en local: `http://localhost:8081`
+  - En producción: `https://TU-APP.vercel.app`
 - **Redirect URLs:**
   - `http://localhost:8081/**`
   - `https://TU-APP.vercel.app/**`
+
+Estas URLs se usan para la confirmación de la cuenta y para el enlace de “¿Olvidaste tu contraseña?”.
+
+> La recuperación de contraseña redirige a `/reset-password`. En iPhone instalado, el enlace abre Safari: ahí se cambia la contraseña y luego se entra a la app instalada con la nueva contraseña.
 
 No necesitas Google ni Apple para este flujo.
 
@@ -192,7 +189,7 @@ Los backups quedan como artifacts del repo por 90 días.
 3. **Añadir a pantalla de inicio** → Añadir.
 4. En iOS 26 el interruptor “Abrir como app web” viene activado.
 
-> En iPhone, la app instalada tiene su propio almacenamiento. Si iniciaste sesión en Safari y luego instalas, probablemente debas pedir un código nuevo **dentro de la app instalada**. Es normal.
+> En iPhone, la app instalada tiene su propio almacenamiento. Inicia sesión **dentro de la app instalada** con tu correo y contraseña. No depende de Safari.
 
 La app incluye una tarjeta de instalación en Inicio y detecta si el link se abrió dentro del navegador de WhatsApp para pedirte que lo abras en Safari/Chrome.
 
@@ -202,7 +199,7 @@ La app incluye una tarjeta de instalación en Inicio y detecta si el link se abr
 
 ## 6. Qué incluye
 
-- Login por código de 6 dígitos al correo.
+- Login con correo + contraseña.
 - Crear espacio de pareja (máximo 2 personas).
 - Invitación por link `https://tu-app.vercel.app/i/CODIGO` y compartir por WhatsApp.
 - Planes: crear, editar, eliminar, favoritos, categorías, fecha, lugar, notas.
@@ -225,12 +222,13 @@ La app incluye una tarjeta de instalación en Inicio y detecta si el link se abr
 | iOS instalar | Manual desde Compartir. No hay botón de instalación. |
 | iOS notificaciones push | Solo app instalada, iOS 16.4+, permiso con toque. **No está en v1** (se muestra como “Pronto”). |
 | iOS almacenamiento | El sistema puede borrar datos locales si no se usa. La fuente de verdad es Supabase. |
-| iOS login | La app instalada no comparte sesión con Safari; pide código dentro de la app. |
+| iOS login | Inicia sesión dentro de la app instalada con correo y contraseña; no depende de Safari. |
 | Navegador interno | WhatsApp/Instagram no permiten instalar. Abrir en Safari/Chrome. |
 | Supabase gratis | 500 MB DB, 1 GB storage (~2.500 fotos comprimidas), 5 GB egress, 50.000 MAU, 200 conexiones realtime, 2 proyectos. |
 | Pausa | 7 días sin actividad. Mitigado con cron de Vercel + tarea local opcional. |
 | Backups | No incluidos en gratis. Workflow semanal incluido. |
-| Emails | SMTP integrado limitado; usar Brevo/Resend. |
+| Emails | Solo para confirmación y recuperación de contraseña. Si no desactivas la confirmación, usa SMTP propio (Brevo/Resend). |
+| Plantillas de correo | El plan gratis no permite editarlas; la app no las necesita. |
 | Vercel Hobby | Uso no comercial, 100 GB de banda/mes. Suficiente para dos personas. |
 | Dominio | `*.vercel.app` gratis. Cambiarlo después obliga a reinstalar la PWA. |
 | Logo | Hello Kitty es propiedad de Sanrio. Este proyecto es de uso personal. Para algo público, usar el gatito vectorial del prototipo o un logo propio. |
@@ -247,7 +245,7 @@ src/
     (tabs)/             Inicio, Planes, Calendario, Recuerdos, Nosotros
     plan/[id]/          detalle y álbum
     nuevo.tsx           editor de plan
-    welcome / verify    login OTP
+    welcome / reset      login y recuperación
     i/[code].tsx        link de invitación
   components/           UI, calendario, tab bar, visor de fotos
   lib/                  Supabase, fechas, tema, imágenes, demo, storage
@@ -262,15 +260,26 @@ api/keepalive.ts        cron diario de Vercel
 
 ## 9. Problemas comunes
 
-**No llega el código**
-- Revisa spam.
-- Confirma que configuraste SMTP propio (Brevo/Resend). El SMTP por defecto de Supabase no sirve para usuarios externos.
-- Revisa que **Confirm signup** y **Magic Link** incluyan `{{ .Token }}`.
-- Revisa **Authentication → Logs**.
+**No llega el correo de confirmación**
+- Si puedes, desactiva **Confirm email** en Authentication → Providers → Email; el registro entra directo.
+- Si lo dejas activo, configura SMTP propio (Brevo/Resend). El SMTP por defecto de Supabase no sirve para usuarios externos.
+- Revisa spam y **Authentication → Logs**.
 
-**“El código no es correcto o expiró”**
-- Pide uno nuevo. Los códigos vencen y son de un solo uso.
-- Verifica que el template del correo incluya `{{ .Token }}` y no solo el enlace.
+**“Correo o contraseña incorrectos”**
+- Revisa mayúsculas y espacios.
+- Si la cuenta es nueva, puede faltar confirmar el correo: revisa el enlace de confirmación.
+- Usa “¿Olvidaste tu contraseña?” para crear una nueva.
+
+**“Confirma tu correo”**
+- Abre el enlace del correo de confirmación una vez.
+- Después vuelve a la app y entra con tu correo y contraseña.
+
+**No llega el enlace de recuperación**
+- Confirma que **Site URL** y **Redirect URLs** en Supabase incluyan `http://localhost:8081/**` y la URL de Vercel.
+- En iPhone, el enlace abre Safari; cambia la contraseña ahí y luego entra a la app instalada.
+
+**El enlace de recuperación expiró**
+- Pide otro desde “¿Olvidaste tu contraseña?”. Los enlaces vencen y son de un solo uso.
 
 **El link de invitación no abre**
 - Confirma que `EXPO_PUBLIC_APP_URL` y **Site URL** en Supabase coinciden con la URL de Vercel.
@@ -281,7 +290,7 @@ api/keepalive.ts        cron diario de Vercel
 - Revisa que el cron de Vercel esté en **Deployments → Cron Jobs**.
 
 **Fotos que no cargan**
-- Las URLs firmadas vencen a las 6 h. Cierra y abre la app, o baja y sube; se renuevan.
+- Las URLs firmadas vencen a las 24 h. Cierra y abre la app, o baja y sube; se renuevan.
 - Revisa las políticas del bucket en **Storage → Policies**.
 
 **Cambios que no aparecen en el otro teléfono**

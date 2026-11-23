@@ -8,7 +8,7 @@
     { "source": "/plan/:path*", "destination": "/index.html" },
     { "source": "/nuevo", "destination": "/index.html" },
     { "source": "/welcome", "destination": "/index.html" },
-    { "source": "/verify", "destination": "/index.html" },
+    { "source": "/reset-password", "destination": "/index.html" },
     { "source": "/space", "destination": "/index.html" },
     { "source": "/invite", "destination": "/index.html" },
     { "source": "/accept", "destination": "/index.html" },

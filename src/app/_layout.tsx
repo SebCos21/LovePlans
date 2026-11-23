@@ -49,16 +49,22 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { status, pendingInvite } = useApp();
+  const { status, pendingInvite, recoveryMode } = useApp();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (status === 'loading') return;
     const top = (segments[0] as string | undefined) ?? '';
 
+    if (recoveryMode) {
+      if (top !== 'reset-password') router.replace('/reset-password');
+      return;
+    }
+
+    if (status === 'loading') return;
+
     if (status === 'signedOut') {
-      if (!['welcome', 'verify', 'accept'].includes(top)) router.replace('/welcome');
+      if (!['welcome', 'accept', 'reset-password'].includes(top)) router.replace('/welcome');
       return;
     }
 
@@ -76,10 +82,10 @@ function RootNavigator() {
       return;
     }
 
-    if (['welcome', 'verify', 'space', 'i', 'demo'].includes(top) || top === '') {
+    if (['welcome', 'i', 'demo', 'reset-password'].includes(top) || top === '') {
       router.replace('/(tabs)');
     }
-  }, [status, segments, pendingInvite, router]);
+  }, [status, segments, pendingInvite, recoveryMode, router]);
 
   return (
     <Stack
@@ -100,6 +106,7 @@ function RootNavigator() {
       <Stack.Screen name="plan/[id]" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="plan/[id]/album" options={{ animation: 'slide_from_right' }} />
       <Stack.Screen name="i/[code]" options={{ animation: 'fade' }} />
+      <Stack.Screen name="reset-password" options={{ animation: 'fade' }} />
       <Stack.Screen name="demo" options={{ animation: 'fade' }} />
     </Stack>
   );

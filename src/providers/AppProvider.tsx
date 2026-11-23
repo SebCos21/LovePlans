@@ -4,7 +4,7 @@ import { AppState } from 'react-native';
 
 import { loadDemoDb, saveDemoDb, type DemoDB } from '@/lib/demo';
 import { errorMessage, isSupabaseConfigured, requireSupabase, supabase } from '@/lib/supabase';
-import { storage } from '@/lib/storage';
+import { publicAppUrl, storage } from '@/lib/storage';
 import { base64ToBytes, randomId, toDataUrl } from '@/lib/image';
 import type {
   InvitePreview,
@@ -38,10 +38,13 @@ export type AppContextValue = {
   busy: boolean;
   notice: string | null;
   noticeTone: NoticeTone;
+  recoveryMode: boolean;
   showNotice: (message: string, tone?: NoticeTone) => void;
   dismissNotice: () => void;
-  sendCode: (email: string) => Promise<void>;
-  verifyCode: (email: string, code: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<{ needsConfirmation: boolean }>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
   signOut: () => Promise<void>;
   enterDemo: () => Promise<void>;
   exitDemo: () => Promise<void>;
@@ -84,6 +87,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [noticeTone, setNoticeTone] = useState<NoticeTone>('info');
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   const demoRef = useRef<DemoDB | null>(null);
   const noticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -311,6 +315,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryMode(true);
+        if (nextSession) {
+          bootUser(nextSession.user).catch((error) => {
+            showNotice(errorMessage(error), 'error');
+          });
+        }
+        return;
+      }
       if (!nextSession) {
         bootedRef.current = null;
         setProfile(null);
@@ -319,6 +332,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPlans([]);
         setPhotos([]);
         setInvitationCode(null);
+        setRecoveryMode(false);
         setStatus('signedOut');
       } else if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         bootUser(nextSession.user).catch((error) => {
@@ -341,6 +355,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPlans([]);
     setPhotos([]);
     setInvitationCode(null);
+    setRecoveryMode(false);
     setStatus('signedOut');
   }, []);
 
@@ -490,23 +505,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => sub.remove();
   }, [mode, status, refreshPlans, refreshPhotos, refreshMembersAndSpace]);
 
-  const sendCode = useCallback(async (email: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const client = requireSupabase();
-    const { error } = await client.auth.signInWithOtp({
+    const { error } = await client.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
-      options: { shouldCreateUser: true },
+      password,
     });
     if (error) throw new Error(errorMessage(error));
   }, []);
 
-  const verifyCode = useCallback(async (email: string, code: string) => {
+  const signUp = useCallback(async (email: string, password: string, name: string) => {
     const client = requireSupabase();
-    const { error } = await client.auth.verifyOtp({
-      email: email.trim().toLowerCase(),
-      token: code.trim(),
-      type: 'email',
+    const cleanEmail = email.trim().toLowerCase();
+    const displayName = name.trim() || cleanEmail.split('@')[0];
+    const { data, error } = await client.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: { data: { display_name: displayName } },
     });
     if (error) throw new Error(errorMessage(error));
+    return { needsConfirmation: !data.session };
+  }, []);
+
+  const resetPassword = useCallback(async (email: string) => {
+    const client = requireSupabase();
+    const { error } = await client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: `${publicAppUrl()}/reset-password`,
+    });
+    if (error) throw new Error(errorMessage(error));
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    const client = requireSupabase();
+    const { error } = await client.auth.updateUser({ password });
+    if (error) throw new Error(errorMessage(error));
+    setRecoveryMode(false);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -1118,10 +1151,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       busy,
       notice,
       noticeTone,
+      recoveryMode,
       showNotice,
       dismissNotice,
-      sendCode,
-      verifyCode,
+      signIn,
+      signUp,
+      resetPassword,
+      updatePassword,
       signOut,
       enterDemo,
       exitDemo,
@@ -1161,10 +1197,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       busy,
       notice,
       noticeTone,
+      recoveryMode,
       showNotice,
       dismissNotice,
-      sendCode,
-      verifyCode,
+      signIn,
+      signUp,
+      resetPassword,
+      updatePassword,
       signOut,
       enterDemo,
       exitDemo,

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { HeartHandshake, LogOut, Mail, Ticket } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 
 import { Avatar, Body, Button, Screen, Title } from '@/components/ui';
@@ -9,7 +10,11 @@ import { useApp } from '@/providers/AppProvider';
 
 export default function SpaceScreen() {
   const router = useRouter();
-  const { profile, session, signOut, createSpace, busy, configured, enterDemo, showNotice } = useApp();
+  const { profile, session, space, signOut, createSpace, busy, configured, enterDemo, showNotice } = useApp();
+
+  useEffect(() => {
+    if (space) router.replace('/invite');
+  }, [space, router]);
 
   const create = async () => {
     try {
@@ -59,7 +64,7 @@ export default function SpaceScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
             <Mail size={13} color={colors.faint} />
             <Text style={{ fontFamily: fonts.body, fontSize: 11, color: colors.faint }}>
-              Tu correo es tu llave. No necesitas contraseña.
+              Usa tu correo y contraseña para entrar.
             </Text>
           </View>
         </View>
