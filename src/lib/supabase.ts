@@ -61,6 +61,8 @@ export function errorMessage(error: unknown): string {
     return 'El enlace no es válido o ya expiró.';
   if (lower.includes('unable to validate email') || lower.includes('invalid email'))
     return 'Revisa tu correo, parece incompleto.';
+  if ((lower.includes('email address') || lower.includes('email')) && lower.includes('invalid'))
+    return 'Ese correo no parece válido. Revisa que esté bien escrito.';
   if (message.includes('fetch')) return 'No hay conexión. Revisa tu internet.';
   return message;
 }
